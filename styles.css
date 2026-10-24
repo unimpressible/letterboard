@@ -279,6 +279,9 @@ select option,select optgroup{background:#16202d;color:var(--text)}
 .fgroup h3{margin:12px 0 8px}
 .group.fgroup{content-visibility:visible}
 
+.cat-tiles{display:block}
+.cat-tiles .icon .face img{cursor:pointer}
+
 /* favorites tray */
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;align-items:center;gap:8px;
   font:15px var(--font);color:#fff;border:0;border-radius:var(--r-sm);padding:10px 16px;cursor:pointer;box-shadow:0 4px 16px #000c;

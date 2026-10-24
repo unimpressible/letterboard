@@ -5,7 +5,7 @@ import * as profile from "./profile.js";
 
 const state = { type: store.get("lb-cat-type", "background"), q: "", sort: "new", anim: false, favOnly: false, color: "", shown: 0, items: [], loading: false, cardGame: null };
 let pickCtx = null;  // {types, label, onPick, onClear}
-const PAGE = { wide: 48, sq: 120 };
+const PAGE = { wide: 48, sq: 120, tiles: 600 };
 const $ = id => document.getElementById(id);
 
 /* ---------------- sources ---------------- */
@@ -113,22 +113,40 @@ let lastList = [];
 function draw(keepShown) {
   const list = collapse(filtered()); lastList = list;
   const shape = TYPES[state.type]?.shape || "sq";
-  if (!keepShown || !state.shown) state.shown = PAGE[shape];
+  if (!keepShown || !state.shown) state.shown = state.type === "achievement" ? PAGE.tiles : PAGE[shape];
   const grid = $("cat-grid");
   grid.className = "cat-grid" + (shape === "sq" && state.type !== "card" ? " small" : "");
-  const count = list.length.toLocaleString();
-  const what = state.type === "card" && !state.cardGame ? "games with trading cards" : TYPES[state.type].label.toLowerCase();
+  const one = [...state.q.trim()].length === 1 ? ` for “${state.q.trim().toUpperCase()}”` : "";
+  const grouped = state.type === "achievement" && list.some(x => x.similar);
+  const count = grouped ? `${list.length.toLocaleString()} styles${one} (${filtered().length.toLocaleString()} icons)` : list.length.toLocaleString();
+  const what = grouped ? "" : state.type === "card" && !state.cardGame ? "games with trading cards" : TYPES[state.type].label.toLowerCase() + one;
   $("cat-count").innerHTML = state.loading && !list.length ? "Loading…"
     : `${count} ${what}${state.loading ? " so far, still loading…" : ""}${state.cardGame ? ` · <a href="#" id="cat-back">Back to all games</a>` : ""}`;
   $("cat-back")?.addEventListener("click", e => { e.preventDefault(); state.cardGame = null; load(); });
   if (!list.length && !state.loading) {
     grid.innerHTML = `<div class="empty-state">${state.items.length ? (state.favOnly ? "No favorites here yet. Tap a heart on any item." : "Nothing matches that search.") :
       "This list fills in after the site's first daily update from Steam. Check back soon."}</div>`;
-  } else grid.innerHTML = list.slice(0, state.shown).map(cardHtml).join("");
+  } else if (state.type === "achievement") grid.innerHTML = tilesHtml(list.slice(0, state.shown));
+  else grid.innerHTML = list.slice(0, state.shown).map(cardHtml).join("");
+  if (state.type === "achievement") grid.className = "cat-tiles";
   $("cat-more").hidden = list.length <= state.shown;
   wire(grid, list);
 }
+
+// Achievement icons: a compact tile grid grouped by game (no big cards). Click a tile to use it.
+function tilesHtml(list) {
+  const by = new Map();
+  list.forEach((it, n) => { const g = favs.has(it.id) && !state.favOnly ? "fav" : it.appid; if (!by.has(g)) by.set(g, []); by.get(g).push([it, n]); });
+  const order = [...by.keys()].sort((a, b) => (a === "fav" ? -1 : b === "fav" ? 1 : 0));
+  return `<div class="flow">${order.map(g => { const arr = by.get(g); const label = g === "fav" ? "Your favorites" : arr[0][0].game;
+    return `<div class="group fgroup"><h3>${esc(label)} <span class="hint">${arr.length}</span>${g === "fav" ? "" : `<a href="${STEAM.achPage(g)}" target="_blank" rel="noopener">Achievements</a>`}</h3>
+      <div class="icon-grid">${arr.map(([it, n]) => `<div class="icon" data-n="${n}"><div class="face">${favs.heart(it.id)}${it.similar && it.gkey ? `<button type="button" class="more-badge" data-sim="${esc(it.gkey)}" aria-label="${expanded.has(it.gkey) ? "Hide" : "Show"} ${it.similar} similar">${expanded.has(it.gkey) ? "−" : "+" + it.similar}</button>` : ""}<img src="${esc(it.img)}" alt="${esc(it.char || it.title)}" loading="lazy" data-tile title="${esc(`${it.title} · ${it.game}. Click to ${pickCtx ? "use it" : "add it to your achievement showcase"}.`)}"></div></div>`).join("")}</div></div>`; }).join("")}</div>`;
+}
 function wire(grid, list) {
+  grid.querySelectorAll(".icon[data-n] [data-tile]").forEach(img => img.onclick = () => {
+    const it = list[+img.closest(".icon").dataset.n]; if (!it) return;
+    if (pickCtx) { const ctx = pickCtx; endPick(); ctx.onPick(it); location.hash = "#profile"; } else addToShowcase("achievements", it);
+  });
   grid.querySelectorAll(".card").forEach(c => {
     const it = list[+c.dataset.n]; if (!it) return;
     c.querySelector("[data-use]")?.addEventListener("click", () => { const ctx = pickCtx; endPick(); ctx.onPick(it); location.hash = "#profile"; });
@@ -139,7 +157,7 @@ function wire(grid, list) {
     if (v) { c.onmouseenter = () => v.play().catch(() => {}); c.onmouseleave = () => v.pause(); }
   });
   favs.wireHearts(grid, id => list.find(x => x.id === id));
-  grid.querySelectorAll("[data-sim]").forEach(b => b.onclick = () => { const k = b.dataset.sim; expanded.has(k) ? expanded.delete(k) : expanded.add(k); draw(true); });
+  grid.querySelectorAll("[data-sim]").forEach(b => b.onclick = e => { e.stopPropagation(); const k = b.dataset.sim; expanded.has(k) ? expanded.delete(k) : expanded.add(k); draw(true); });
   grid.querySelectorAll("[data-game]").forEach(b => b.onclick = () => { state.cardGame = b.dataset.game; state.q = ""; $("cat-q").value = ""; load(); });
 }
 function addToShowcase(kind, it) {
@@ -186,13 +204,18 @@ export function startPick(ctx) {
 export function endPick() { pickCtx = null; $("pickbar").hidden = true; drawChips(); }
 
 export async function initCatalog() {
-  let t; $("cat-q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value; draw(); }, 180); });
+  let t; $("cat-q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => {
+    state.q = e.target.value;
+    const one = [...state.q.trim()].length === 1;
+    if (one && state.type !== "achievement" && (!pickCtx || pickCtx.types.includes("achievement"))) { setType("achievement"); toast(`Showing letter icons for “${state.q.trim().toUpperCase()}”`); }
+    else draw();
+  }, 180); });
   $("cat-sort").onchange = e => { state.sort = e.target.value; draw(); };
   $("cat-anim").onchange = e => { state.anim = e.target.checked; draw(); };
   $("cat-favs").onchange = e => { state.favOnly = e.target.checked; draw(); };
   colorBubbles($("cat-colors"), () => state.color, c => { state.color = c; draw(); });
   $("cat-colors").hidden = state.type !== "achievement";
-  $("cat-more").onclick = () => { state.shown += PAGE[TYPES[state.type]?.shape || "sq"]; draw(true); };
+  $("cat-more").onclick = () => { state.shown += state.type === "achievement" ? PAGE.tiles : PAGE[TYPES[state.type]?.shape || "sq"]; draw(true); };
   $("pick-cancel").onclick = () => { endPick(); location.hash = "#profile"; };
   if (!TYPES[state.type]) state.type = "background";
   drawChips(); load();
