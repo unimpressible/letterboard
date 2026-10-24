@@ -264,6 +264,21 @@ select option,select optgroup{background:#16202d;color:var(--text)}
 .icon .face img:hover{box-shadow:0 0 0 2px var(--link)}
 .icon span.t{font-size:11px;color:var(--dim);overflow-wrap:anywhere;line-height:1.25}
 
+/* lookalike groups */
+.more-badge{position:absolute;left:-5px;bottom:-5px;z-index:2;min-width:24px;height:20px;padding:0 5px;border:0;border-radius:var(--r-sm);cursor:pointer;
+  font:700 11px var(--font);color:#fff;background:linear-gradient(135deg,var(--blue-a),var(--blue-b));box-shadow:0 1px 4px #000a}
+.more-badge:hover{filter:brightness(1.15)}
+.icon.sub .face img,.pick.sub .sel-btn{opacity:.92;box-shadow:0 0 0 1px #67c1f566}
+.icon-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:12px 10px}
+
+.flow{display:flex;flex-wrap:wrap;gap:6px 26px;align-items:flex-start}
+.fgroup{flex:0 1 auto;min-width:0;max-width:100%}
+.fgroup .icon-grid,.fgroup .pick-grid{display:flex;flex-wrap:wrap}
+.fgroup .pick{width:56px}
+.fgroup .icon{width:70px}
+.fgroup h3{margin:12px 0 8px}
+.group.fgroup{content-visibility:visible}
+
 /* favorites tray */
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;align-items:center;gap:8px;
   font:15px var(--font);color:#fff;border:0;border-radius:var(--r-sm);padding:10px 16px;cursor:pointer;box-shadow:0 4px 16px #000c;

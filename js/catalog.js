@@ -43,7 +43,17 @@ async function load() {
 function filtered() {
   const q = state.q.trim().toLowerCase();
   let list = state.items;
-  if (q) { const words = q.split(/\s+/); list = list.filter(it => { const h = `${it.title} ${it.game} ${it.char || ""}`.toLowerCase(); return words.every(w => h.includes(w)); }); }
+  const raw = state.q.trim();
+  if ([...raw].length === 1) {
+    // One character: show only that character, not every name containing it.
+    const ch = raw.toUpperCase();
+    if (state.type === "achievement") list = list.filter(it => it.char === ch);
+    else {
+      const bare = it => it.title.replace(/^:|:$/g, "").toUpperCase();
+      const exact = list.filter(it => bare(it) === ch);
+      list = exact.length ? exact : list.filter(it => bare(it).startsWith(ch));
+    }
+  } else if (q) { const words = q.split(/\s+/); list = list.filter(it => { const h = `${it.title} ${it.game} ${it.char || ""}`.toLowerCase(); return words.every(w => h.includes(w)); }); }
   if (state.anim) list = list.filter(it => it.animated || it.webm);
   if (state.color && state.type === "achievement") list = list.filter(it => it.color === state.color);
   if (state.favOnly) list = list.filter(it => favs.has(it.id));
@@ -80,12 +90,28 @@ function cardHtml(it, n) {
   const price = it.cost ? `${Number(it.cost).toLocaleString()} pts` : it.price || "";
   return `<div class="card" data-n="${n}">${favs.heart(it.id)}<div class="thumb ${shape === "sq" ? "sq" : ""}">${img}${badge}</div>
     <div class="meta"><div class="t" title="${esc(it.title)}">${esc(it.title)}</div><div class="g" title="${esc(it.game)}">${esc(it.game)}${price ? ` · ${esc(price)}` : ""}</div>
+    ${it.similar && it.gkey ? `<button type="button" class="btn ghost small" data-sim="${esc(it.gkey)}">${expanded.has(it.gkey) ? "Hide" : "Show"} ${it.similar} similar</button>` : ""}
     <div class="acts">${actionsFor(it)}<a href="${esc(it.link)}" target="_blank" rel="noopener">${it.type === "card" ? "Market" : it.type === "achievement" ? "Steam" : "Shop"}</a></div></div></div>`;
 }
 
+// Group lookalike achievement icons (same game, character and main color) unless "Show every variation" is on.
+const expanded = new Set();
+const styleKey = it => `${it.appid}:${it.color || ""}:${it.char || it.title}`;
+function collapse(list) {
+  for (const it of list) it.similar = 0;
+  if (state.type !== "achievement" || store.get("lb-l-all", false)) return list;
+  const groups = new Map();
+  for (const it of list) { const k = favs.has(it.id) ? it.id : styleKey(it); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
+  const out = [];
+  for (const [k, g] of groups) {
+    g[0].similar = g.length - 1; g[0].gkey = k;
+    if (expanded.has(k)) out.push(...g); else out.push(g[0]);
+  }
+  return out;
+}
 let lastList = [];
 function draw(keepShown) {
-  const list = filtered(); lastList = list;
+  const list = collapse(filtered()); lastList = list;
   const shape = TYPES[state.type]?.shape || "sq";
   if (!keepShown || !state.shown) state.shown = PAGE[shape];
   const grid = $("cat-grid");
@@ -113,6 +139,7 @@ function wire(grid, list) {
     if (v) { c.onmouseenter = () => v.play().catch(() => {}); c.onmouseleave = () => v.pause(); }
   });
   favs.wireHearts(grid, id => list.find(x => x.id === id));
+  grid.querySelectorAll("[data-sim]").forEach(b => b.onclick = () => { const k = b.dataset.sim; expanded.has(k) ? expanded.delete(k) : expanded.add(k); draw(true); });
   grid.querySelectorAll("[data-game]").forEach(b => b.onclick = () => { state.cardGame = b.dataset.game; state.q = ""; $("cat-q").value = ""; load(); });
 }
 function addToShowcase(kind, it) {

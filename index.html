@@ -81,7 +81,7 @@
     <div class="cat-head">
       <div class="chips" id="cat-types" role="tablist" aria-label="Item type"></div>
       <div class="cat-tools">
-        <label for="cat-q" class="grow">Search by item or game<input id="cat-q" type="search" placeholder="e.g. Zup, cyberpunk, :heart:" autocomplete="off"></label>
+        <label for="cat-q" class="grow">Search by item or game <span class="hint">Type one letter to see only that letter</span><input id="cat-q" type="search" placeholder="e.g. B, Zup, cyberpunk, :heart:" autocomplete="off"></label>
         <label for="cat-sort">Sort<select id="cat-sort">
           <option value="new">Newest first</option>
           <option value="name">Name A–Z</option>
@@ -117,10 +117,10 @@
     </div>
     <div class="panel">
       <h2>Browse every icon</h2>
-      <p class="lede">Every letter, number and symbol icon from <span id="l-gamecount">all</span> letter games. Pick a letter, or choose stars, hearts, money signs and more from the menu. Tap the heart on any icon to save it.</p>
+      <p class="lede">Every letter, number and symbol icon from <span id="l-gamecount">all</span> letter games. Pick a letter, or choose stars, hearts, money signs and more from the menu. Lookalikes are grouped: tap a +number to see that style’s variations. Tap the heart on any icon to save it.</p>
       <div class="keys" id="l-keys"></div>
       <div class="symrow"><label for="l-sym" class="grow">Symbols, shapes and other alphabets<select id="l-sym"></select></label></div>
-      <div class="colors" id="l-colors2"></div>
+      <div class="tools"><div class="colors" id="l-colors2"></div><label class="check" for="l-showall"><input type="checkbox" id="l-showall"> Show every variation</label></div>
       <div id="l-browse"></div>
     </div>
     <div class="panel">
