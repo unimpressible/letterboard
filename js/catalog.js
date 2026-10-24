@@ -58,10 +58,10 @@ function filtered() {
 
 /* ---------------- drawing ---------------- */
 function actionsFor(it) {
-  if (pickCtx) return `<button type="button" class="btn small" data-use>Use this</button>`;
+  if (pickCtx) return `<button type="button" class="btn green small" data-use>Use this</button>`;
   const a = [];
   const look = TYPES[it.type]?.slot;
-  if (look) a.push(`<button type="button" class="btn small" data-set="${look}">Set as ${TYPES[it.type].one.replace("animated ", "")}</button>`);
+  if (look) a.push(`<button type="button" class="btn green small" data-set="${look}">Set as ${TYPES[it.type].one.replace("animated ", "")}</button>`);
   if (it.type === "achievement") a.push(`<button type="button" class="btn small" data-add="achievements">Add to showcase</button>`);
   if (["emoticon", "sticker", "card", "background"].includes(it.type)) a.push(`<button type="button" class="btn ${look ? "ghost " : ""}small" data-add="items">Add to item showcase</button>`);
   if (it.type === "emoticon") a.push(`<button type="button" class="btn ghost small" data-copy>Copy code</button>`);

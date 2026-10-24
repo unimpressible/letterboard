@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Letterboard</title>
 <meta name="description" content="Design your whole Steam profile: every background, avatar, frame, emoticon, sticker, card and letter achievement, previewed exactly as Steam shows it.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -112,7 +110,7 @@
       <div class="colors" id="l-colors"></div>
       <div class="showcase-preview"><div id="l-row" class="ach-row"></div></div>
       <div id="l-picker" class="picker" hidden></div>
-      <div class="btnrow"><button type="button" class="btn" id="l-apply">Put on my profile</button></div>
+      <div class="btnrow"><button type="button" class="btn green" id="l-apply">Put on my profile</button></div>
       <h3>Games to unlock</h3>
       <div id="l-needs" class="needs"></div>
       <p class="warn" id="l-warn" hidden></p>
@@ -166,6 +164,7 @@
   </section>
 </main>
 
+<footer class="site-foot">Letterboard is a fan-made tool and is not affiliated with Valve or Steam. Item names and images belong to their owners and load directly from Steam.</footer>
 <button type="button" class="fab" id="fav-open" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.8 8.2 3 4.5 6.6 4.5c2.1 0 3.5 1.1 5.4 3.1 1.9-2 3.3-3.1 5.4-3.1 3.6 0 5.8 3.7 4.2 7.3C19.5 16.4 12 21 12 21z"/></svg><span id="fav-count">Favorites</span></button>
 <div class="scrim" id="fav-scrim" hidden></div>
 <aside class="drawer" id="fav-drawer" aria-label="Favorites" hidden>
