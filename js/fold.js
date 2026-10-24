@@ -1,10 +1,11 @@
 // Collapsible game groups. Click a game's name to close its icons; click again to reopen.
-// Which games are closed is remembered in this browser.
+// Everything starts open: closing only lasts until the page reloads or a new letter is picked.
 import { esc, store } from "./data.js";
 
-const KEY = "lb-folded";
-let folded = new Set(store.get(KEY, []).map(String));
-const save = () => store.set(KEY, [...folded]);
+store.set("lb-folded", null);          // forget closed games saved by the earlier version
+let folded = new Set();
+const save = () => {};
+export function reset() { folded.clear(); }
 
 export const isFolded = id => folded.has(String(id));
 export function setAll(ids, closed) { ids.forEach(id => closed ? folded.add(String(id)) : folded.delete(String(id))); save(); }

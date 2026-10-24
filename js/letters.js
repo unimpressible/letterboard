@@ -87,7 +87,7 @@ function renderPlanner() {
     if (p === undefined) return `<span class="tile missing" title="No icon found">${esc(c)}</span>`;
     return `<button type="button" class="tile ${open === i ? "sel" : ""}" data-i="${i}" title="${esc(`${c} from ${p.game}. Click to choose its style.`)}"><img src="${esc(p.img)}" alt="${esc(c)}"></button>`;
   }).join("");
-  $("l-row").querySelectorAll("[data-i]").forEach(b => b.onclick = () => { open = open === +b.dataset.i ? null : +b.dataset.i; renderPlanner(); });
+  $("l-row").querySelectorAll("[data-i]").forEach(b => b.onclick = () => { open = open === +b.dataset.i ? null : +b.dataset.i; fold.reset(); renderPlanner(); });
 
   const pk = $("l-picker");
   if (open != null && picks[open]) {
@@ -143,7 +143,7 @@ function symOptions() {
 function renderBrowse() {
   store.set("lb-l-sel", sel); store.set("lb-l-bcolor", browseColor);
   $("l-keys").innerHTML = keyBtns([...AZ, ...D09]);
-  $("l-keys").querySelectorAll("[data-k]").forEach(b => b.onclick = () => { sel = { kind: "char", id: b.dataset.k }; $("l-sym").value = ""; renderBrowse(); });
+  $("l-keys").querySelectorAll("[data-k]").forEach(b => b.onclick = () => { sel = { kind: "char", id: b.dataset.k }; $("l-sym").value = ""; fold.reset(); renderBrowse(); });
   const base = selectionList(), list = inColor(base, browseColor);
   const bids = groupIds(list);
   $("l-browse").innerHTML = `<div class="browse-head"><p class="hint">${list.length.toLocaleString()} icons for ${esc(selectionLabel())}${browseColor ? ` in ${browseColor}` : ""}${browseColor && !list.length && base.length ? `. Try another color; there are ${base.length} in other colors.` : "."} Click a game’s name to close or reopen it.</p>${bids.length > 1 ? fold.controls(bids) : ""}</div>` +
@@ -196,6 +196,6 @@ export async function initLetters() {
   $("l-showall").checked = showAll;
   $("l-showall").onchange = e => setShowAll(e.target.checked);
   $("l-sym").innerHTML = symOptions();
-  $("l-sym").onchange = e => { if (e.target.value) { sel = { kind: "group", id: e.target.value }; renderBrowse(); } };
+  $("l-sym").onchange = e => { if (e.target.value) { sel = { kind: "group", id: e.target.value }; fold.reset(); renderBrowse(); } };
   renderPlanner(); renderBrowse(); renderGame();
 }

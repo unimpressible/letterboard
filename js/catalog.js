@@ -212,6 +212,7 @@ export function endPick() { pickCtx = null; $("pickbar").hidden = true; drawChip
 
 export async function initCatalog() {
   let t; $("cat-q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => {
+    if (e.target.value.trim() !== state.q.trim()) fold.reset();
     state.q = e.target.value;
     const one = [...state.q.trim()].length === 1;
     if (one && state.type !== "achievement" && (!pickCtx || pickCtx.types.includes("achievement"))) { setType("achievement"); toast(`Showing letter icons for “${state.q.trim().toUpperCase()}”`); }
