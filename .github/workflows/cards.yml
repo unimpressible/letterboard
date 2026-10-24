@@ -1,0 +1,35 @@
+# Collects trading cards from the Community Market, a slow batch at a time, and saves them in the repo.
+# The next "Update and publish" run puts them on the site.
+name: Collect trading cards
+
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cards
+  cancel-in-progress: false
+
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Trading cards (the full set fills in over a few days)
+        run: node scripts/fetch-cards.mjs --minutes 50
+        continue-on-error: true
+      - name: Save the cards in the repo
+        run: |
+          git config user.name "letterboard-bot"
+          git config user.email "letterboard-bot@users.noreply.github.com"
+          git add data/cards
+          git diff --cached --quiet || git commit -m "Update trading cards from Steam"
+          for i in 1 2 3; do git pull --rebase -X ours && git push && break; sleep 10; done

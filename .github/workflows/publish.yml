@@ -1,5 +1,6 @@
 # Collects everything from Steam's public feeds, saves it in the repo, and publishes the site.
 # Runs daily, on every push, and when you press "Run workflow" in the Actions tab.
+# Trading cards are collected separately (cards.yml) so publishing never waits on them.
 # No Steam key or secrets needed.
 name: Update and publish
 
@@ -36,9 +37,6 @@ jobs:
         continue-on-error: true
       - name: Points Shop items (backgrounds, avatars, frames, emoticons, stickers)
         run: node scripts/fetch-points-shop.mjs
-        continue-on-error: true
-      - name: Trading cards (a batch per run; the full set fills in over about a week)
-        run: node scripts/fetch-cards.mjs --minutes 45
         continue-on-error: true
       - name: Save the collected data in the repo
         run: |
