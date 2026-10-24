@@ -282,6 +282,16 @@ select option,select optgroup{background:#16202d;color:var(--text)}
 .cat-tiles{display:block}
 .cat-tiles .icon .face img{cursor:pointer}
 
+/* collapsible game groups */
+.fold{display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:2px 4px 2px 0;margin:0;color:var(--bright);font:inherit;cursor:pointer;border-radius:var(--r-sm)}
+.fold:hover{color:var(--link)}
+.fold .chev{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor;transition:transform .12s}
+.fold[aria-expanded=false] .chev{transform:rotate(-90deg)}
+.grp-label .fold{color:inherit;text-transform:inherit;letter-spacing:inherit;font-size:inherit}
+.fgroup.closed{background:#ffffff0a;border-radius:var(--r-sm);padding:2px 10px 4px 6px}
+.fgroup.closed h3,.fgroup.closed .grp-label{margin:4px 0}
+.browse-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+
 /* favorites tray */
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;align-items:center;gap:8px;
   font:15px var(--font);color:#fff;border:0;border-radius:var(--r-sm);padding:10px 16px;cursor:pointer;box-shadow:0 4px 16px #000c;

@@ -1,6 +1,7 @@
 // Catalog: every Points Shop item, every trading card and every achievement icon, searchable.
 import { STEAM, TYPES, achGame, achIndex, apps, cardIndex, cardsFor, colorBubbles, esc, json, loadItems, store, toast } from "./data.js";
 import * as favs from "./favs.js";
+import * as fold from "./fold.js";
 import * as profile from "./profile.js";
 
 const state = { type: store.get("lb-cat-type", "background"), q: "", sort: "new", anim: false, favOnly: false, color: "", shown: 0, items: [], loading: false, cardGame: null };
@@ -140,9 +141,9 @@ function tilesHtml(list) {
   const by = new Map();
   list.forEach((it, n) => { const g = favs.has(it.id) && !state.favOnly ? "fav" : it.appid; if (!by.has(g)) by.set(g, []); by.get(g).push([it, n]); });
   const order = [...by.keys()].sort((a, b) => (a === "fav" ? -1 : b === "fav" ? 1 : 0));
-  return `<div class="flow">${order.map(g => { const arr = by.get(g); const label = g === "fav" ? "Your favorites" : arr[0][0].game;
-    return `<div class="group fgroup"><h3>${esc(label)} <span class="hint">${arr.length}</span>${g === "fav" ? "" : `<a href="${STEAM.achPage(g)}" target="_blank" rel="noopener">Achievements</a>`}</h3>
-      <div class="icon-grid">${arr.map(([it, n]) => `<div class="icon" data-n="${n}"><div class="face">${favs.heart(it.id)}${it.similar && it.gkey ? `<button type="button" class="more-badge" data-sim="${esc(it.gkey)}" aria-label="${expanded.has(it.gkey) ? "Hide" : "Show"} ${it.similar} similar">${expanded.has(it.gkey) ? "−" : "+" + it.similar}</button>` : ""}<img src="${esc(it.img)}" alt="${esc(it.char || it.title)}" loading="lazy" data-tile title="${esc(`${it.title} · ${it.game}. Click to ${pickCtx ? "use it" : "add it to your achievement showcase"}.`)}"></div></div>`).join("")}</div></div>`; }).join("")}</div>`;
+  return `<div class="browse-head"><span class="hint">Click a game’s name to close or reopen it.</span>${order.length > 1 ? fold.controls(order.map(String)) : ""}</div><div class="flow">${order.map(g => { const arr = by.get(g); const label = g === "fav" ? "Your favorites" : arr[0][0].game; const closed = fold.isFolded(g);
+    return `<div class="group fgroup ${closed ? "closed" : ""}"><h3>${fold.header(g, label, ` <span class="hint">${arr.length}</span>${g === "fav" || closed ? "" : `<a href="${STEAM.achPage(g)}" target="_blank" rel="noopener">Achievements</a>`}`)}</h3>
+      <div class="icon-grid" ${closed ? "hidden" : ""}>${(closed ? [] : arr).map(([it, n]) => `<div class="icon" data-n="${n}"><div class="face">${favs.heart(it.id)}${it.similar && it.gkey ? `<button type="button" class="more-badge" data-sim="${esc(it.gkey)}" aria-label="${expanded.has(it.gkey) ? "Hide" : "Show"} ${it.similar} similar">${expanded.has(it.gkey) ? "−" : "+" + it.similar}</button>` : ""}<img src="${esc(it.img)}" alt="${esc(it.char || it.title)}" loading="lazy" data-tile title="${esc(`${it.title} · ${it.game}. Click to ${pickCtx ? "use it" : "add it to your achievement showcase"}.`)}"></div></div>`).join("")}</div></div>`; }).join("")}</div>`;
 }
 function wire(grid, list) {
   grid.querySelectorAll(".icon[data-n] [data-tile]").forEach(img => img.onclick = () => {
@@ -161,6 +162,8 @@ function wire(grid, list) {
     if (v) { c.onmouseenter = () => v.play().catch(() => {}); c.onmouseleave = () => v.pause(); }
   });
   favs.wireHearts(grid, id => list.find(x => x.id === id));
+  fold.wire(grid, () => draw(true));
+  fold.wireControls(grid, [...grid.querySelectorAll("[data-fold]")].map(b => b.dataset.fold), () => draw(true));
   grid.querySelectorAll("[data-sim]").forEach(b => b.onclick = e => { e.stopPropagation(); const k = b.dataset.sim; expanded.has(k) ? expanded.delete(k) : expanded.add(k); draw(true); });
   grid.querySelectorAll("[data-game]").forEach(b => b.onclick = () => { state.cardGame = b.dataset.game; state.q = ""; $("cat-q").value = ""; load(); });
 }

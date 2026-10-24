@@ -3,6 +3,7 @@
 import { STEAM, achGame, achIndex, colorBubbles, esc, store, toast } from "./data.js";
 import { GROUPS, PUNCTUATION, SCRIPTS } from "../scripts/symbols.mjs";
 import * as favs from "./favs.js";
+import * as fold from "./fold.js";
 import * as profile from "./profile.js";
 
 const $ = id => document.getElementById(id);
@@ -70,6 +71,7 @@ function grouped(list, render) {
   return (fav.length ? render("Your favorites", fav.map(o => ({ o })), null, true, fav.length) : "") +
     [...by].map(([g, arr]) => render(games.get(g)?.name || `App ${g}`, collapse(arr), g, false, arr.length)).join("");
 }
+const groupIds = list => [...new Set(list.map(o => favs.has(o.id) ? "fav" : String(o.appid)))];
 const countLabel = (shown, total) => shown === total ? `${total}` : `${shown} style${shown === 1 ? "" : "s"}, ${total} icons`;
 
 let picks = [];
@@ -92,11 +94,14 @@ function renderPlanner() {
     const c = chars[open], cur = picks[open], list = opts(c);
     const fellBack = planColor && !inColor(all(c), planColor).length;
     pk.hidden = false;
-    pk.innerHTML = `<div class="picker-head"><b>Choose a style for “${esc(c)}” · ${list.length} icons</b><span class="btnrow"><label class="check"><input type="checkbox" class="showall" ${showAll ? "checked" : ""}> Show every variation</label><button type="button" class="btn ghost small" id="l-done">Done</button></span></div>` +
+    const pids = groupIds(list);
+    pk.innerHTML = `<div class="picker-head"><b>Choose a style for “${esc(c)}” · ${list.length} icons</b><span class="btnrow">${fold.controls(pids)}<label class="check"><input type="checkbox" class="showall" ${showAll ? "checked" : ""}> Show every variation</label><button type="button" class="btn ghost small" id="l-done">Done</button></span></div>` +
       (fellBack ? `<p class="hint">No ${planColor} “${esc(c)}” exists, so every color is shown.</p>` : "") +
-      `<div class="flow">` + grouped(list, (label, arr, g, fav, total) => `<div class="fgroup"><div class="grp-label ${fav ? "fav" : ""}">${esc(label)} · ${countLabel(arr.filter(e => e.first !== false).length, total)}</div><div class="pick-grid">${arr.map(e => pickBtn(e, cur)).join("")}</div></div>`) + `</div>`;
+      `<div class="flow">` + grouped(list, (label, arr, g, fav, total) => { const id = fav ? "fav" : g, closed = fold.isFolded(id);
+        return `<div class="fgroup ${closed ? "closed" : ""}"><div class="grp-label ${fav ? "fav" : ""}">${fold.header(id, label, ` <span class="hint">${countLabel(arr.filter(e => e.first !== false).length, total)}</span>`)}</div>${closed ? "" : `<div class="pick-grid">${arr.map(e => pickBtn(e, cur)).join("")}</div>`}</div>`; }) + `</div>`;
     pk.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { chosen[open + ":" + c] = b.dataset.k; renderPlanner(); });
-    wireBadges(pk, () => { const t = pk.scrollTop; renderPlanner(); $("l-picker").scrollTop = t; });
+    const keep = () => { const t = pk.scrollTop; renderPlanner(); $("l-picker").scrollTop = t; };
+    wireBadges(pk, keep); fold.wire(pk, keep); fold.wireControls(pk, pids, keep);
     favs.wireHearts(pk, id => byId.get(id));
     $("l-done").onclick = () => { open = null; renderPlanner(); };
     pk.querySelector(".showall").onchange = e => setShowAll(e.target.checked);
@@ -140,9 +145,12 @@ function renderBrowse() {
   $("l-keys").innerHTML = keyBtns([...AZ, ...D09]);
   $("l-keys").querySelectorAll("[data-k]").forEach(b => b.onclick = () => { sel = { kind: "char", id: b.dataset.k }; $("l-sym").value = ""; renderBrowse(); });
   const base = selectionList(), list = inColor(base, browseColor);
-  $("l-browse").innerHTML = `<p class="hint" style="margin:10px 0 0">${list.length.toLocaleString()} icons for ${esc(selectionLabel())}${browseColor ? ` in ${browseColor}` : ""}${browseColor && !list.length && base.length ? `. Try another color; there are ${base.length} in other colors.` : "."}</p>` +
-    `<div class="flow">` + grouped(list, (label, arr, g, fav, total) => `<div class="group fgroup"><h3>${esc(label)} <span class="hint">${countLabel(arr.filter(e => e.first !== false).length, total)}</span>${g ? `<a href="${STEAM.achPage(g)}" target="_blank" rel="noopener">Achievements</a>` : ""}</h3>
-    <div class="icon-grid">${arr.map(e => `<div class="icon ${e.open && !e.first ? "sub" : ""}"><div class="face">${favs.heart(e.o.id)}${badge(e)}<img src="${esc(e.o.img)}" alt="" loading="lazy" data-add="${esc(e.o.id)}" title="${esc(e.o.title)}: add to achievement showcase"></div></div>`).join("")}</div></div>`) + `</div>`;
+  const bids = groupIds(list);
+  $("l-browse").innerHTML = `<div class="browse-head"><p class="hint">${list.length.toLocaleString()} icons for ${esc(selectionLabel())}${browseColor ? ` in ${browseColor}` : ""}${browseColor && !list.length && base.length ? `. Try another color; there are ${base.length} in other colors.` : "."} Click a game’s name to close or reopen it.</p>${bids.length > 1 ? fold.controls(bids) : ""}</div>` +
+    `<div class="flow">` + grouped(list, (label, arr, g, fav, total) => { const id = fav ? "fav" : g, closed = fold.isFolded(id);
+      return `<div class="group fgroup ${closed ? "closed" : ""}"><h3>${fold.header(id, label, ` <span class="hint">${countLabel(arr.filter(e => e.first !== false).length, total)}</span>${g && !closed ? `<a href="${STEAM.achPage(g)}" target="_blank" rel="noopener">Achievements</a>` : ""}`)}</h3>
+    ${closed ? "" : `<div class="icon-grid">${arr.map(e => `<div class="icon ${e.open && !e.first ? "sub" : ""}"><div class="face">${favs.heart(e.o.id)}${badge(e)}<img src="${esc(e.o.img)}" alt="" loading="lazy" data-add="${esc(e.o.id)}" title="${esc(e.o.title)}: add to achievement showcase"></div></div>`).join("")}</div>`}</div>`; }) + `</div>`;
+  fold.wire($("l-browse"), renderBrowse); fold.wireControls($("l-browse"), bids, renderBrowse);
   $("l-browse").querySelectorAll("[data-add]").forEach(b => b.onclick = () => addOne(byId.get(b.dataset.add)));
   wireBadges($("l-browse"), renderBrowse);
   favs.wireHearts($("l-browse"), id => byId.get(id));

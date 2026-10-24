@@ -47,6 +47,8 @@ jobs:
           git pull --rebase -X ours || true
           git push || echo "Nothing pushed"
           rm -rf node_modules
+      - name: Stamp this version so browsers load the new files right away
+        run: sed -i "s/__V__/${GITHUB_SHA::8}/g" index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
