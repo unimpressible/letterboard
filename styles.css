@@ -122,10 +122,10 @@ select option,select optgroup{background:#16202d;color:var(--text)}
 @media (max-width:640px){.steam .header{grid-template-columns:auto minmax(0,1fr)}.steam .lvl{grid-column:1/-1}}
 .steam .av{position:relative;width:166px;height:166px;cursor:pointer;flex:none}
 @media (max-width:640px){.steam .av{width:96px;height:96px}}
-.steam .av .pic{position:absolute;inset:0;background:#3d4450 linear-gradient(135deg,#4b5563,#2a313a);border:2px solid #3a6a8a;overflow:hidden}
+.steam .av .pic{position:absolute;inset:0;box-sizing:border-box;background:#3d4450 linear-gradient(135deg,#4b5563,#2a313a);border:2px solid #3a6a8a;overflow:hidden}
 .steam .av .pic img{width:100%;height:100%;object-fit:cover;display:block}
 .steam .av .pic .q{display:grid;place-items:center;width:100%;height:100%;font:700 64px var(--steam);color:#7b8794}
-.steam .av .frame{position:absolute;inset:-12%;width:124%;height:124%;pointer-events:none}
+.steam .av .frame{position:absolute;left:-10.87%;top:-10.87%;width:121.74%;height:121.74%;max-width:none;pointer-events:none}
 .steam .who{min-width:0;cursor:pointer}
 .steam .who h1{font:400 26px var(--steam);color:#fff;letter-spacing:.01em;overflow-wrap:anywhere}
 .steam .who .real{color:var(--s-dim);font-size:14px;margin-top:4px}
@@ -170,7 +170,7 @@ select option,select optgroup{background:#16202d;color:var(--text)}
 .miniprofile .mav .pic{position:absolute;inset:0;background:#3d4450;overflow:hidden}
 .miniprofile .mav .pic img{width:100%;height:100%;object-fit:cover}
 .miniprofile .mav .pic .q{display:grid;place-items:center;width:100%;height:100%;font:700 28px var(--steam);color:#7b8794}
-.miniprofile .mav .frame{position:absolute;inset:-12%;width:124%;height:124%}
+.miniprofile .mav .frame{position:absolute;left:-10.87%;top:-10.87%;width:121.74%;height:121.74%;max-width:none;pointer-events:none}
 .miniprofile .mname{font-size:18px;color:#fff;overflow-wrap:anywhere}
 .miniprofile .mstat{font-size:13px;color:#57cbde}
 .miniprofile .mlvl{padding:10px 16px 14px;font-size:13px;background:rgba(0,0,0,.55)}

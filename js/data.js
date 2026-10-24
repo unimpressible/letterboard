@@ -34,6 +34,12 @@ export const TYPES = {
   achievement:{ label: "Achievement icons", one: "achievement icon", shape: "sq" },
 };
 
+export const ANIMATED_SMALL = new Set(["avatar", "frame", "sticker"]);
+// Older saved profiles stored the still image as `img` for these types; swap to the animated file.
+export function fixSaved(it) {
+  if (it && !it.v && ANIMATED_SMALL.has(it.type) && it.thumb && it.thumb !== it.img) return { ...it, img: it.thumb, still: it.img, thumb: it.img, v: 2 };
+  return it;
+}
 // Normalize one Points Shop row: [appid, defid, title, name, small, large, webm, mp4, animated, cost, created]
 export function fromRow(type, r, names) {
   const [appid, id, title, name, small, large, webm, mp4, animated, cost, created] = r;
@@ -42,6 +48,13 @@ export function fromRow(type, r, names) {
   if (type === "emoticon") { it.title = name || title; it.img = STEAM.emote(it.title, true); it.thumb = it.img; it.contain = true; }
   else {
     it.img = STEAM.item(appid, large || small); it.thumb = STEAM.item(appid, small || large);
+    // Avatars, frames and stickers: Steam's "small" file is the animated one (GIF / animated PNG)
+    // and "large" is a still. Show the animation; keep the still for light catalog thumbnails.
+    if (ANIMATED_SMALL.has(type) && small) {
+      it.img = STEAM.item(appid, small); it.still = STEAM.item(appid, large || small); it.thumb = it.still;
+      if (small !== large) it.animated = true;
+    }
+    it.v = 2;
     if (type === "background" || type === "mini") it.thumb = it.img;
     if (webm) it.webm = STEAM.item(appid, webm);
     if (mp4) it.mp4 = STEAM.item(appid, mp4);

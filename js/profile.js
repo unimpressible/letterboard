@@ -1,5 +1,5 @@
 // Profile builder: editor column + live Steam profile replica + mini-profile + shopping list.
-import { STEAM, esc, store, toast } from "./data.js";
+import { STEAM, esc, fixSaved, store, toast } from "./data.js";
 
 const KEY = "lb-profile-v2";
 const SHOWCASES = {
@@ -25,13 +25,18 @@ export const defaults = () => ({
 
 // Keep only what's needed to draw an item (keeps saved profiles and share links small).
 export const snap = it => it && ({ type: it.type, appid: it.appid, title: it.title, game: it.game, img: it.img,
-  thumb: it.thumb, webm: it.webm, mp4: it.mp4, contain: it.contain, link: it.link, animated: it.animated, desc: it.desc });
+  thumb: it.thumb, still: it.still, webm: it.webm, mp4: it.mp4, contain: it.contain, link: it.link, animated: it.animated, desc: it.desc, v: it.v });
 
 export let P = load();
 function load() {
   const fromHash = decodeShare(location.hash);
-  if (fromHash) { history.replaceState(null, "", "#profile"); return fromHash; }
-  return { ...defaults(), ...store.get(KEY, {}) };
+  if (fromHash) { history.replaceState(null, "", "#profile"); return migrate(fromHash); }
+  return migrate({ ...defaults(), ...store.get(KEY, {}) });
+}
+function migrate(p) {
+  for (const k of ["avatar", "frame", "background", "mini"]) p[k] = fixSaved(p[k]);
+  for (const sc of p.showcases || []) if (sc.slots) sc.slots = sc.slots.map(fixSaved);
+  return p;
 }
 export function save() { store.set(KEY, P); render(); }
 function encodeShare(p) {
@@ -61,8 +66,9 @@ export function emojify(text) {
 }
 const ringColor = lvl => ["#9b9b9b","#c02942","#d95b43","#fecc23","#467a3c","#4e8ddb","#7652c9","#c252c9","#542437","#997c52"][Math.floor((lvl % 100) / 10)];
 
+const avatarSrc = a => a && a.img;
 function avatarHtml(cls) {
-  return `<div class="${cls}"><div class="pic">${P.avatar ? `<img src="${esc(P.avatar.img)}" alt="">` : `<span class="q">?</span>`}</div>
+  return `<div class="${cls}"><div class="pic">${P.avatar ? `<img src="${esc(avatarSrc(P.avatar))}" alt="">` : `<span class="q">?</span>`}</div>
     ${P.frame ? `<img class="frame" src="${esc(P.frame.img)}" alt="">` : ""}</div>`;
 }
 

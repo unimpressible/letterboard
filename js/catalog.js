@@ -83,9 +83,11 @@ function cardHtml(it, n) {
   const shape = TYPES[it.type]?.shape || "sq";
   const vid = it.webm && (it.type === "background" || it.type === "mini")
     ? `<video muted loop playsinline preload="none" poster="${esc(it.img)}" data-hover><source src="${esc(it.webm)}" type="video/webm"></video>` : "";
+  // Animated avatars, frames and stickers show a still until hovered, so the grid stays fast.
+  const anim = it.still && it.still !== it.img ? ` data-still="${esc(it.still)}" data-anim="${esc(it.img)}"` : "";
   const img = it.type === "frame"
-    ? `<img src="${esc(it.img)}" class="frame" alt="" loading="lazy">`
-    : vid || `<img src="${esc(it.thumb || it.img)}" class="${it.contain ? "contain" : ""}" alt="" loading="lazy">`;
+    ? `<img src="${esc(it.thumb || it.img)}" class="frame" alt="" loading="lazy"${anim}>`
+    : vid || `<img src="${esc(it.thumb || it.img)}" class="${it.contain ? "contain" : ""}" alt="" loading="lazy"${anim}>`;
   const badge = it.animated || it.webm ? `<span class="badge">Animated</span>` : "";
   const price = it.cost ? `${Number(it.cost).toLocaleString()} pts` : it.price || "";
   return `<div class="card" data-n="${n}">${favs.heart(it.id)}<div class="thumb ${shape === "sq" ? "sq" : ""}">${img}${badge}</div>
@@ -153,6 +155,8 @@ function wire(grid, list) {
     c.querySelector("[data-set]")?.addEventListener("click", e => { profile.P[e.target.dataset.set] = profile.snap(it); profile.save(); toast(`Set as your ${TYPES[it.type].one}`); });
     c.querySelector("[data-add]")?.addEventListener("click", e => addToShowcase(e.target.dataset.add, it));
     c.querySelector("[data-copy]")?.addEventListener("click", async () => { try { await navigator.clipboard.writeText(it.title); toast(`Copied ${it.title}`); } catch { toast(it.title); } });
+    const a = c.querySelector("img[data-anim]");
+    if (a) { c.addEventListener("mouseenter", () => a.src = a.dataset.anim); c.addEventListener("mouseleave", () => a.src = a.dataset.still); }
     const v = c.querySelector("video[data-hover]");
     if (v) { c.onmouseenter = () => v.play().catch(() => {}); c.onmouseleave = () => v.pause(); }
   });
