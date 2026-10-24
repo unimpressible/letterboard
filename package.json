@@ -1,0 +1,15 @@
+{
+  "name": "letterboard",
+  "private": true,
+  "type": "module",
+  "description": "Data collectors for the Letterboard site. The site itself needs no build step.",
+  "scripts": {
+    "achievements": "node scripts/fetch-achievements.mjs",
+    "colors": "node scripts/fetch-colors.mjs",
+    "shop": "node scripts/fetch-points-shop.mjs",
+    "cards": "node scripts/fetch-cards.mjs --minutes 10"
+  },
+  "dependencies": {
+    "sharp": "0.33.5"
+  }
+}

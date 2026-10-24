@@ -2,12 +2,14 @@
 // Every achievement icon for every game in data/games.json, from Steam's public
 // achievement feed (no key). Writes:
 //   data/achievements/index.json   game list + every icon tagged as a character, grouped by character
-//   data/achievements/<appid>.json every icon of one game
+//   data/achievements/<appid>.json every icon of one game: [file, name, desc, char|null, color|null]
+// Colors come from scripts/fetch-colors.mjs and are kept across runs.
 // Icons are referenced by file name and load straight from Steam's image servers.
 // Usage: node scripts/fetch-achievements.mjs [appid ...]
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DATA, getJson, readJson, sleep, writeJson } from "./lib.mjs";
+import { groupsFor } from "./symbols.mjs";
 
 // ---- character detection ---------------------------------------------------
 const SINGLE = /^[\p{L}\p{N}]$/u;
@@ -58,6 +60,8 @@ async function main() {
     try {
       const data = await fetchGame(g.id);
       if (!data.icons.length) throw new Error("no achievements");
+      const prev = new Map((await readJson(path.join(dir, `${g.id}.json`), [])).map(r => [r[0], r[4]]));
+      data.icons.forEach(r => { r[4] = prev.get(r[0]) || null; });
       await writeJson(path.join(dir, `${g.id}.json`), data.icons);
       known.set(g.id, { id: g.id, name: g.name, note: g.note || "", total: data.total, icons: data.icons.length,
         tagged: data.icons.filter(x => x[3]).length });
@@ -66,14 +70,26 @@ async function main() {
     await sleep(500);
   }
 
-  // Character index across all games: {char: [[appid, file, name], ...]}
-  const chars = {};
+  await buildIndex(games, known);
+}
+
+// Index across all games:
+//   chars:  {char: [[appid, file, name, color], ...]}
+//   groups: {groupId: [[appid, file, name, color], ...]}  (stars, hearts, money, punct:$, script:cyrillic, ...)
+export async function buildIndex(games, known) {
+  const dir = path.join(DATA, "achievements");
+  if (!known) known = new Map((await readJson(path.join(dir, "index.json"), { games: [] })).games.map(g => [g.id, g]));
+  const chars = {}, groups = {};
   const ordered = games.map(g => known.get(g.id)).filter(Boolean);
   for (const g of ordered) {
     const icons = await readJson(path.join(dir, `${g.id}.json`), []);
-    for (const [file, name, , c] of icons) if (c) (chars[c] ||= []).push([g.id, file, name]);
+    for (const [file, name, , c, color] of icons) {
+      const row = [g.id, file, name, color || null];
+      if (c) (chars[c] ||= []).push(row);
+      for (const id of groupsFor(c, name)) (groups[id] ||= []).push(row);
+    }
   }
-  await writeJson(path.join(dir, "index.json"), { updated: new Date().toISOString(), games: ordered, chars });
+  await writeJson(path.join(dir, "index.json"), { updated: new Date().toISOString(), games: ordered, chars, groups });
   const total = ordered.reduce((n, g) => n + g.icons, 0);
   console.log(`\n${ordered.length} games, ${total} icons, ${Object.values(chars).reduce((n, a) => n + a.length, 0)} tagged.`);
   if (!total) process.exit(1);

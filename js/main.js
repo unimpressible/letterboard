@@ -3,6 +3,7 @@ import { json } from "./data.js";
 import { initProfile, setPicker, render as renderProfile } from "./profile.js";
 import { initCatalog, startPick } from "./catalog.js";
 import { initLetters } from "./letters.js";
+import { initFavs } from "./favs.js";
 
 const VIEWS = ["profile", "catalog", "letters", "help"];
 let started = {};
@@ -22,6 +23,7 @@ function route() {
 
 setPicker(ctx => { if (!started.catalog) { started.catalog = true; initCatalog().then(() => startPick(ctx)); } else startPick(ctx); });
 initProfile();
+initFavs();
 window.addEventListener("hashchange", route);
 route();
 

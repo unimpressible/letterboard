@@ -31,6 +31,9 @@ jobs:
       - name: Achievement icons
         run: node scripts/fetch-achievements.mjs
         continue-on-error: true
+      - name: Icon colors (only new icons)
+        run: npm install --no-audit --no-fund && node scripts/fetch-colors.mjs
+        continue-on-error: true
       - name: Points Shop items (backgrounds, avatars, frames, emoticons, stickers)
         run: node scripts/fetch-points-shop.mjs
         continue-on-error: true
@@ -43,7 +46,9 @@ jobs:
           git config user.email "letterboard-bot@users.noreply.github.com"
           git add data
           git diff --cached --quiet || git commit -m "Update data from Steam"
+          git pull --rebase -X ours || true
           git push || echo "Nothing pushed"
+          rm -rf node_modules
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

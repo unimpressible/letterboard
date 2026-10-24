@@ -6,7 +6,7 @@
 <title>Letterboard</title>
 <meta name="description" content="Design your whole Steam profile: every background, avatar, frame, emoticon, sticker, card and letter achievement, previewed exactly as Steam shows it.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -66,7 +66,7 @@
 
       <div class="stage">
         <div class="stage-head">
-          <span class="eyebrow">Preview</span>
+          <h2>Live preview</h2>
           <span class="hint">Click anything in the preview to change it.</span>
         </div>
         <div id="steam" class="steam"></div>
@@ -91,7 +91,9 @@
           <option value="cost">Cheapest first</option>
         </select></label>
         <label class="check" for="cat-anim"><input type="checkbox" id="cat-anim"> Animated only</label>
+        <label class="check" for="cat-favs"><input type="checkbox" id="cat-favs"> Favorites only</label>
       </div>
+      <div class="colors" id="cat-colors" hidden></div>
       <p class="hint" id="cat-count" role="status"></p>
     </div>
     <div id="cat-grid" class="cat-grid"></div>
@@ -107,6 +109,7 @@
         <label for="l-word" class="grow">Your text<input id="l-word" type="text" maxlength="7" autocomplete="off" spellcheck="false"></label>
         <label for="l-style">Letter style<select id="l-style"></select></label>
       </div>
+      <div class="colors" id="l-colors"></div>
       <div class="showcase-preview"><div id="l-row" class="ach-row"></div></div>
       <div id="l-picker" class="picker" hidden></div>
       <div class="btnrow"><button type="button" class="btn" id="l-apply">Put on my profile</button></div>
@@ -115,10 +118,11 @@
       <p class="warn" id="l-warn" hidden></p>
     </div>
     <div class="panel">
-      <h2>Browse every icon by character</h2>
-      <p class="lede">Every achievement icon that is a letter, number or symbol, from <span id="l-gamecount">all</span> letter games. The number on each key is how many icons exist.</p>
+      <h2>Browse every icon</h2>
+      <p class="lede">Every letter, number and symbol icon from <span id="l-gamecount">all</span> letter games. Pick a letter, or choose stars, hearts, money signs and more from the menu. Tap the heart on any icon to save it.</p>
       <div class="keys" id="l-keys"></div>
-      <details class="more-keys"><summary>Symbols and other alphabets</summary><div class="keys" id="l-keys2"></div></details>
+      <div class="symrow"><label for="l-sym" class="grow">Symbols, shapes and other alphabets<select id="l-sym"></select></label></div>
+      <div class="colors" id="l-colors2"></div>
       <div id="l-browse"></div>
     </div>
     <div class="panel">
@@ -162,6 +166,14 @@
   </section>
 </main>
 
+<button type="button" class="fab" id="fav-open" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.8 8.2 3 4.5 6.6 4.5c2.1 0 3.5 1.1 5.4 3.1 1.9-2 3.3-3.1 5.4-3.1 3.6 0 5.8 3.7 4.2 7.3C19.5 16.4 12 21 12 21z"/></svg><span id="fav-count">Favorites</span></button>
+<div class="scrim" id="fav-scrim" hidden></div>
+<aside class="drawer" id="fav-drawer" aria-label="Favorites" hidden>
+  <div class="drawer-head"><h2>Your favorites</h2><button type="button" class="btn ghost small" id="fav-close">Close</button></div>
+  <p class="hint">Everything you hearted, side by side. Favorites also jump to the top of every list and picker.</p>
+  <div id="fav-body"></div>
+  <div class="btnrow"><button type="button" class="btn ghost small" id="fav-clear">Clear all favorites</button></div>
+</aside>
 <div id="toast" class="toast" role="status" hidden></div>
 <script type="module" src="js/main.js"></script>
 </body>

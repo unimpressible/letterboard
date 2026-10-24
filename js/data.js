@@ -88,3 +88,15 @@ export const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+
+// Color filter bubbles. `get()` returns the current color ("" for all); `set(c)` is called on change.
+export const COLORS = ["pink", "red", "orange", "yellow", "green", "teal", "blue", "purple", "white", "gray", "black", "rainbow"];
+export function colorBubbles(el, get, set, label = "Main color") {
+  const paint = () => {
+    el.innerHTML = `<span class="lab">${label}</span><button type="button" class="dot all" aria-pressed="${!get()}">All</button>` +
+      COLORS.map(c => `<button type="button" class="dot" data-c="${c}" aria-pressed="${get() === c}" aria-label="${c}" title="${c[0].toUpperCase() + c.slice(1)}"></button>`).join("");
+    el.querySelectorAll(".dot").forEach(b => b.onclick = () => { set(b.dataset.c || ""); paint(); });
+  };
+  paint();
+  return paint;
+}

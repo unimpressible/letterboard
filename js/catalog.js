@@ -1,8 +1,9 @@
 // Catalog: every Points Shop item, every trading card and every achievement icon, searchable.
-import { STEAM, TYPES, achGame, achIndex, apps, cardIndex, cardsFor, esc, json, loadItems, store, toast } from "./data.js";
+import { STEAM, TYPES, achGame, achIndex, apps, cardIndex, cardsFor, colorBubbles, esc, json, loadItems, store, toast } from "./data.js";
+import * as favs from "./favs.js";
 import * as profile from "./profile.js";
 
-const state = { type: store.get("lb-cat-type", "background"), q: "", sort: "new", anim: false, shown: 0, items: [], loading: false, cardGame: null };
+const state = { type: store.get("lb-cat-type", "background"), q: "", sort: "new", anim: false, favOnly: false, color: "", shown: 0, items: [], loading: false, cardGame: null };
 let pickCtx = null;  // {types, label, onPick, onClear}
 const PAGE = { wide: 48, sq: 120 };
 const $ = id => document.getElementById(id);
@@ -13,7 +14,7 @@ async function achievementItems(onProgress) {
   const out = [];
   for (const g of idx.games) {
     const icons = await achGame(g.id);
-    icons.forEach(([file, name, desc, c], n) => out.push({ type: "achievement", appid: g.id, id: `ach:${g.id}:${n}`, title: name, desc, char: c,
+    icons.forEach(([file, name, desc, c, color]) => out.push({ type: "achievement", appid: g.id, id: `ach:${g.id}:${file}`, title: name, desc, char: c, color,
       game: g.name, img: STEAM.ach(g.id, file), thumb: STEAM.ach(g.id, file), link: STEAM.achPage(g.id), created: 0 }));
     onProgress(out, false);
   }
@@ -44,13 +45,15 @@ function filtered() {
   let list = state.items;
   if (q) { const words = q.split(/\s+/); list = list.filter(it => { const h = `${it.title} ${it.game} ${it.char || ""}`.toLowerCase(); return words.every(w => h.includes(w)); }); }
   if (state.anim) list = list.filter(it => it.animated || it.webm);
+  if (state.color && state.type === "achievement") list = list.filter(it => it.color === state.color);
+  if (state.favOnly) list = list.filter(it => favs.has(it.id));
   const by = {
     new: (a, b) => (b.created || 0) - (a.created || 0),
     name: (a, b) => a.title.localeCompare(b.title),
     game: (a, b) => a.game.localeCompare(b.game) || a.title.localeCompare(b.title),
     cost: (a, b) => (a.cost || 0) - (b.cost || 0),
   }[state.sort];
-  return state.sort === "new" && state.type === "achievement" ? list : [...list].sort(by);
+  return favs.favFirst(state.sort === "new" && state.type === "achievement" ? list : [...list].sort(by));
 }
 
 /* ---------------- drawing ---------------- */
@@ -75,7 +78,7 @@ function cardHtml(it, n) {
     : vid || `<img src="${esc(it.thumb || it.img)}" class="${it.contain ? "contain" : ""}" alt="" loading="lazy">`;
   const badge = it.animated || it.webm ? `<span class="badge">Animated</span>` : "";
   const price = it.cost ? `${Number(it.cost).toLocaleString()} pts` : it.price || "";
-  return `<div class="card" data-n="${n}"><div class="thumb ${shape === "sq" ? "sq" : ""}">${img}${badge}</div>
+  return `<div class="card" data-n="${n}">${favs.heart(it.id)}<div class="thumb ${shape === "sq" ? "sq" : ""}">${img}${badge}</div>
     <div class="meta"><div class="t" title="${esc(it.title)}">${esc(it.title)}</div><div class="g" title="${esc(it.game)}">${esc(it.game)}${price ? ` · ${esc(price)}` : ""}</div>
     <div class="acts">${actionsFor(it)}<a href="${esc(it.link)}" target="_blank" rel="noopener">${it.type === "card" ? "Market" : it.type === "achievement" ? "Steam" : "Shop"}</a></div></div></div>`;
 }
@@ -93,7 +96,7 @@ function draw(keepShown) {
     : `${count} ${what}${state.loading ? " so far, still loading…" : ""}${state.cardGame ? ` · <a href="#" id="cat-back">Back to all games</a>` : ""}`;
   $("cat-back")?.addEventListener("click", e => { e.preventDefault(); state.cardGame = null; load(); });
   if (!list.length && !state.loading) {
-    grid.innerHTML = `<div class="empty-state">${state.items.length ? "Nothing matches that search." :
+    grid.innerHTML = `<div class="empty-state">${state.items.length ? (state.favOnly ? "No favorites here yet. Tap a heart on any item." : "Nothing matches that search.") :
       "This list fills in after the site's first daily update from Steam. Check back soon."}</div>`;
   } else grid.innerHTML = list.slice(0, state.shown).map(cardHtml).join("");
   $("cat-more").hidden = list.length <= state.shown;
@@ -109,6 +112,7 @@ function wire(grid, list) {
     const v = c.querySelector("video[data-hover]");
     if (v) { c.onmouseenter = () => v.play().catch(() => {}); c.onmouseleave = () => v.pause(); }
   });
+  favs.wireHearts(grid, id => list.find(x => x.id === id));
   grid.querySelectorAll("[data-game]").forEach(b => b.onclick = () => { state.cardGame = b.dataset.game; state.q = ""; $("cat-q").value = ""; load(); });
 }
 function addToShowcase(kind, it) {
@@ -136,7 +140,7 @@ function drawChips() {
   $("cat-types").innerHTML = allowed.map(t => `<button type="button" role="tab" class="chip" aria-selected="${t === state.type}" data-t="${t}">${TYPES[t].label}${N[t] ? `<span class="n">${N[t].toLocaleString()}</span>` : ""}</button>`).join("");
   $("cat-types").querySelectorAll("[data-t]").forEach(b => b.onclick = () => setType(b.dataset.t));
 }
-function setType(t) { state.type = t; state.cardGame = null; if (!pickCtx) store.set("lb-cat-type", t); drawChips(); load(); }
+function setType(t) { state.type = t; $("cat-colors").hidden = t !== "achievement"; state.cardGame = null; if (!pickCtx) store.set("lb-cat-type", t); drawChips(); load(); }
 
 /* ---------------- pick mode ---------------- */
 export function startPick(ctx) {
@@ -148,6 +152,7 @@ export function startPick(ctx) {
     b.onclick = () => { const c = pickCtx; endPick(); c.onClear(); location.hash = "#profile"; }; bar.insertBefore(b, $("pick-cancel")); }
   state.q = ""; $("cat-q").value = "";
   if (!ctx.types.includes(state.type)) state.type = ctx.types[0];
+  $("cat-colors").hidden = state.type !== "achievement";
   state.cardGame = null; drawChips(); load();
   location.hash = "#catalog";
 }
@@ -157,6 +162,9 @@ export async function initCatalog() {
   let t; $("cat-q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value; draw(); }, 180); });
   $("cat-sort").onchange = e => { state.sort = e.target.value; draw(); };
   $("cat-anim").onchange = e => { state.anim = e.target.checked; draw(); };
+  $("cat-favs").onchange = e => { state.favOnly = e.target.checked; draw(); };
+  colorBubbles($("cat-colors"), () => state.color, c => { state.color = c; draw(); });
+  $("cat-colors").hidden = state.type !== "achievement";
   $("cat-more").onclick = () => { state.shown += PAGE[TYPES[state.type]?.shape || "sq"]; draw(true); };
   $("pick-cancel").onclick = () => { endPick(); location.hash = "#profile"; };
   if (!TYPES[state.type]) state.type = "background";
