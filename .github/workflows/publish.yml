@@ -1,0 +1,59 @@
+# Collects everything from Steam's public feeds, saves it in the repo, and publishes the site.
+# Runs daily, on every push, and when you press "Run workflow" in the Actions tab.
+# No Steam key or secrets needed.
+name: Update and publish
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update-and-publish
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Achievement icons
+        run: node scripts/fetch-achievements.mjs
+        continue-on-error: true
+      - name: Points Shop items (backgrounds, avatars, frames, emoticons, stickers)
+        run: node scripts/fetch-points-shop.mjs
+        continue-on-error: true
+      - name: Trading cards (a batch per run; the full set fills in over about a week)
+        run: node scripts/fetch-cards.mjs --minutes 45
+        continue-on-error: true
+      - name: Save the collected data in the repo
+        run: |
+          git config user.name "letterboard-bot"
+          git config user.email "letterboard-bot@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "Update data from Steam"
+          git push || echo "Nothing pushed"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

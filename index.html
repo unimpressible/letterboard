@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Letterboard</title>
+<meta name="description" content="Design your whole Steam profile: every background, avatar, frame, emoticon, sticker, card and letter achievement, previewed exactly as Steam shows it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#profile" aria-label="Letterboard home"><span>L</span><span>E</span><span>T</span><b>Letterboard</b></a>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#profile" data-view="profile">Profile builder</a>
+    <a href="#catalog" data-view="catalog">Catalog</a>
+    <a href="#letters" data-view="letters">Letters</a>
+    <a href="#help" data-view="help">How to</a>
+  </nav>
+</header>
+
+<div id="pickbar" class="pickbar" hidden>
+  <span id="pick-text"></span>
+  <button type="button" class="btn ghost" id="pick-cancel">Cancel</button>
+</div>
+
+<main>
+  <!-- PROFILE -->
+  <section id="view-profile" class="view" hidden>
+    <div class="builder">
+      <aside class="editor" aria-label="Profile settings">
+        <h2>Your profile</h2>
+        <label for="p-name">Name<input id="p-name" type="text" maxlength="32" autocomplete="off"></label>
+        <div class="row2">
+          <label for="p-real">Real name<input id="p-real" type="text" maxlength="40" autocomplete="off"></label>
+          <label for="p-level">Steam level<input id="p-level" type="number" min="0" max="9999"></label>
+        </div>
+        <label for="p-country">Location<input id="p-country" type="text" maxlength="40" autocomplete="off"></label>
+        <label for="p-summary">Summary <span class="hint">Type :emoticon: codes to show emoticons</span><textarea id="p-summary" rows="4"></textarea></label>
+
+        <h3>Look</h3>
+        <div class="slots" id="look-slots"></div>
+
+        <h3>Showcases</h3>
+        <div id="sc-list" class="sc-list"></div>
+        <div class="add-sc">
+          <label for="sc-add">Add a showcase<select id="sc-add">
+            <option value="">Choose…</option>
+            <option value="achievements">Achievement showcase</option>
+            <option value="items">Item showcase</option>
+            <option value="info">Custom info box</option>
+            <option value="game">Favorite game</option>
+            <option value="artwork">Artwork showcase</option>
+          </select></label>
+        </div>
+
+        <h3>Save and share</h3>
+        <div class="btnrow">
+          <button type="button" class="btn" id="p-share">Copy share link</button>
+          <button type="button" class="btn ghost" id="p-reset">Start over</button>
+        </div>
+        <p class="hint" id="p-status" role="status"></p>
+        <p class="hint">Your profile saves in this browser automatically. The share link opens your exact design for anyone.</p>
+      </aside>
+
+      <div class="stage">
+        <div class="stage-head">
+          <span class="eyebrow">Preview</span>
+          <span class="hint">Click anything in the preview to change it.</span>
+        </div>
+        <div id="steam" class="steam"></div>
+        <h3 class="mini-h">Mini-profile <span class="hint">what people see when they hover your name</span></h3>
+        <div id="mini" class="miniprofile"></div>
+        <h3 class="mini-h">Shopping list</h3>
+        <div id="shopping" class="shopping"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATALOG -->
+  <section id="view-catalog" class="view" hidden>
+    <div class="cat-head">
+      <div class="chips" id="cat-types" role="tablist" aria-label="Item type"></div>
+      <div class="cat-tools">
+        <label for="cat-q" class="grow">Search by item or game<input id="cat-q" type="search" placeholder="e.g. Zup, cyberpunk, :heart:" autocomplete="off"></label>
+        <label for="cat-sort">Sort<select id="cat-sort">
+          <option value="new">Newest first</option>
+          <option value="name">Name A–Z</option>
+          <option value="game">Game A–Z</option>
+          <option value="cost">Cheapest first</option>
+        </select></label>
+        <label class="check" for="cat-anim"><input type="checkbox" id="cat-anim"> Animated only</label>
+      </div>
+      <p class="hint" id="cat-count" role="status"></p>
+    </div>
+    <div id="cat-grid" class="cat-grid"></div>
+    <div class="more"><button type="button" class="btn ghost" id="cat-more" hidden>Show more</button></div>
+  </section>
+
+  <!-- LETTERS -->
+  <section id="view-letters" class="view" hidden>
+    <div class="panel">
+      <h2>Spell it with achievements</h2>
+      <p class="lede">The achievement showcase has 7 slots. Type up to 7 characters, click any letter to pick its style, then put it on your profile.</p>
+      <div class="tools">
+        <label for="l-word" class="grow">Your text<input id="l-word" type="text" maxlength="7" autocomplete="off" spellcheck="false"></label>
+        <label for="l-style">Letter style<select id="l-style"></select></label>
+      </div>
+      <div class="showcase-preview"><div id="l-row" class="ach-row"></div></div>
+      <div id="l-picker" class="picker" hidden></div>
+      <div class="btnrow"><button type="button" class="btn" id="l-apply">Put on my profile</button></div>
+      <h3>Games to unlock</h3>
+      <div id="l-needs" class="needs"></div>
+      <p class="warn" id="l-warn" hidden></p>
+    </div>
+    <div class="panel">
+      <h2>Browse every icon by character</h2>
+      <p class="lede">Every achievement icon that is a letter, number or symbol, from <span id="l-gamecount">all</span> letter games. The number on each key is how many icons exist.</p>
+      <div class="keys" id="l-keys"></div>
+      <details class="more-keys"><summary>Symbols and other alphabets</summary><div class="keys" id="l-keys2"></div></details>
+      <div id="l-browse"></div>
+    </div>
+    <div class="panel">
+      <h2>Browse a game’s full set</h2>
+      <div class="tools">
+        <label for="l-game" class="grow">Game<select id="l-game"></select></label>
+        <label class="check" for="l-all"><input type="checkbox" id="l-all" checked> Include icons that aren’t characters</label>
+      </div>
+      <p class="hint" id="l-gameinfo"></p>
+      <div id="l-gamegrid" class="icon-grid"></div>
+    </div>
+  </section>
+
+  <!-- HELP -->
+  <section id="view-help" class="view" hidden>
+    <div class="panel prose">
+      <h2>Getting it onto your real profile</h2>
+      <h3>Backgrounds, avatars, frames and mini-profiles</h3>
+      <ol>
+        <li>Each item in your shopping list links to its Points Shop page. Buy it with Steam Points (you earn them by buying games on Steam).</li>
+        <li>On Steam, open your profile, choose <b>Edit Profile</b>, then <b>Profile Background</b>, <b>Avatar</b>, <b>Avatar Frame</b> or <b>Mini Profile</b>, and pick the item.</li>
+      </ol>
+      <h3>Achievement showcase</h3>
+      <ol>
+        <li>Buy the games in your shopping list and unlock the achievements it names. In the Zup! games, levels are named after the letter they award.</li>
+        <li>In <b>Edit Profile → Featured Showcase</b>, add an <b>Achievement Showcase</b> and fill the 7 slots in the order shown here.</li>
+      </ol>
+      <h3>Item showcase</h3>
+      <ol>
+        <li>Get each item: emoticons, stickers and backgrounds from the Points Shop or Community Market, trading cards from the Market or by playing the game.</li>
+        <li>Add an <b>Item Showcase</b> and choose the items from your inventory in order.</li>
+      </ol>
+      <h3>Good to know</h3>
+      <ul>
+        <li>How many showcases you can add depends on your Steam level.</li>
+        <li>Emoticons work in your summary and in custom info boxes: type the code, like <code>:steamhappy:</code>.</li>
+        <li>Prices and Points Shop availability change. Check the item on Steam before you buy.</li>
+      </ul>
+      <p class="hint" id="data-dates"></p>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
